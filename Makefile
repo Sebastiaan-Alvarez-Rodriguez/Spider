@@ -4,7 +4,7 @@ SRC  = src
 OBJ  = obj
 LIB  = libs
 
-EXEC       = Atheris
+EXEC       = awc
 WARNINGS   = -Wall -Wextra -pedantic
 NOWARNINGS = -w
 DEBUG      = -g
@@ -64,12 +64,12 @@ xoutofy = $(or $(eval PROCESSED := $(PROCESSED) .),$(info $(WHITE)[$(YELLOW)$(wo
 # Requests object creation, links, builds fast executable
 fast: lib $(COBJS) $(CXXOBJS)
 	@$(call xoutofy,$(GREEN)Linking fast $(EXEC))
-	$(CXX) $(CXXFASTFLAGS) $(CXXOBJS) $(COBJS) -o $(EXEC) $(LIBS) $(LDIRS)
+	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
 
 # Requests object creation, links, builds debug executable
 debug: lib $(COBJS) $(CXXOBJS)
 	@$(call xoutofy,$(GREEN)Linking debug $(EXEC))
-	$(CXX) $(CXXFLAGS) $(CXXOBJS) $(COBJS) -o $(EXEC) $(LIBS) $(LDIRS)
+	$(CXX) $(CXXFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
 
 # Compiles haut library
 lib: $(COBJS)
