@@ -10,6 +10,9 @@
 
 //TODO list:
 // Implement better tree structure? Library: https://github.com/algorithm-ninja/cpp-btree
+// Current tree idea from // https://www.cprogramming.com/tutorial/lesson18.html
+
+// Make 'index': https://www.morevisibility.com/blogs/seo/what-is-a-search-engine-index.html
 
 
 //Takes a list of urls, separated by '\n', and returns a set containing these urls in form std::string

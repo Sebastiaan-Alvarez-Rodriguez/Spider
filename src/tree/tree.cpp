@@ -48,7 +48,6 @@ bool Tree::insert(std::string url) {
     return insert(url, root);
 }
 
-// https://www.cprogramming.com/tutorial/lesson18.html
 bool Tree::insert(std::string url, Node* pointer) {
     int cmp = url.compare(pointer->val);
 
@@ -69,10 +68,6 @@ bool Tree::insert(std::string url, Node* pointer) {
     } else {
         return false;
     }
-}
-
-bool Tree::contains(std::string url) {
-    return false;
 }
 
 void Tree::destroy(Node* node) {

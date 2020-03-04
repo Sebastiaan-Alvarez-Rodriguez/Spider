@@ -61,15 +61,15 @@ xoutofy = $(or $(eval PROCESSED := $(PROCESSED) .),$(info $(WHITE)[$(YELLOW)$(wo
 
 .PHONY: debug fast
 
-# Requests object creation, links, builds fast executable
-fast: lib $(COBJS) $(CXXOBJS)
-	@$(call xoutofy,$(GREEN)Linking fast $(EXEC))
-	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
-
 # Requests object creation, links, builds debug executable
 debug: lib $(COBJS) $(CXXOBJS)
 	@$(call xoutofy,$(GREEN)Linking debug $(EXEC))
 	$(CXX) $(CXXFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
+
+# Requests object creation, links, builds fast executable
+fast: lib $(COBJS) $(CXXOBJS)
+	@$(call xoutofy,$(GREEN)Linking fast $(EXEC))
+	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
 
 # Compiles haut library
 lib: $(COBJS)

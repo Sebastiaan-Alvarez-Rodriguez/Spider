@@ -1,1 +1,4 @@
 *.pdf
+/obj
+/libs
+spider
