@@ -22,10 +22,12 @@ static char* GetWebPage(const char* myurl) {
     curl_easy_setopt(curl, CURLOPT_URL, myurl);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_write);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L); //We stop trying to connect after 10s (probably dead link)
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0);
     CURLcode curl_res = curl_easy_perform(curl);
 
-    char* ret;
+    char* ret = NULL;
     if (curl_res == 0 ) {
         ret = malloc(html.used * sizeof(char)+1);
         memcpy(ret, html.content, html.used);
@@ -45,6 +47,8 @@ static char* GetWebPage(const char* myurl) {
 // Returns found links with newlines ('\n') between them
 static char* parseWithAttributeCallback(const char* myhtmlpage, const char* myurl, void (*function)(haut_t*, strfragment_t*, strfragment_t*)) {
     char* const html = GetWebPage(myhtmlpage);
+    if (html == NULL)
+        return NULL;
     const size_t len = strlen(html);
 
     link_t links;
