@@ -10,7 +10,7 @@ NOWARNINGS = -w
 DEBUG      = -g
 
 IDIRS = -I$(SRC) -I$(SRC)/haut-html/include
-LIBS  =  -lrt -lpthread -lhaut -lcurl
+LIBS  =  -lrt -lpthread -lhaut -lcurl -lstdc++fs
 LDIRS = -L$(LIB)
 
 CFLAGS     = $(IDIRS) -std=c11 $(WARNINGS) $(DEBUG)
