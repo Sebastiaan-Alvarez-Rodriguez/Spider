@@ -5,8 +5,8 @@
 #include <haut/haut.h>
 
 #include "callbacks/callbacks.h"
-#include "structs/link.h"
-#include "structs/html.h"
+#include "retriever/structs/linkcontainer/linkcontainer.h"
+#include "retriever/structs/html.h"
 #include "retriever.h"
 
 
@@ -45,43 +45,31 @@ static char* GetWebPage(const char* myurl) {
 // Second url is the base domain name (e.g. domain.test, if you want to get domain.test/subdir/test.html links)
 // The function argument must handle extraction of any requested data, and concatenation using '\n'
 // Returns found links with newlines ('\n') between them
-static char* parseWithAttributeCallback(const char* myhtmlpage, const char* myurl, void (*function)(haut_t*, strfragment_t*, strfragment_t*)) {
+static linkcontainer_t* parseWithAttributeCallback(const char* myhtmlpage, const char* myurl, void (*function)(haut_t*, strfragment_t*, strfragment_t*)) {
     char* const html = GetWebPage(myhtmlpage);
     if (html == NULL)
         return NULL;
     const size_t len = strlen(html);
 
-    link_t links;
-    links.content = malloc(1024*sizeof(char));
-    links.used = 0;
-    links.len = 1024;
-    links.base = myurl;
-    links.baselen = strlen(myurl);
+    linkcontainer_t* container = malloc(sizeof(linkcontainer_t));
+    container_create(container, 128, myurl);
 
     haut_t parser;
     haut_init(&parser);
-    parser.userdata = &links;
+    parser.userdata = &container;
     parser.events.attribute = function;
     
     haut_setInput(&parser, html, len);
     haut_parse(&parser);
 
     haut_destroy(&parser);
-
-    char* ret = NULL;
-    if (links.used != 0) {
-        ret = malloc(links.used * sizeof(char) +1);
-        memcpy(ret, links.content, links.used);
-        ret[links.used] = '\0';
-    }
-    free(links.content);
     free(html);
-    return ret;
+    return container;
 }
 
 // Takes 2 urls as parameter, and a function. First url is the (sub)page of a domain you want to get links from (in <a href="url.test"/> format).
 // Second url is the base domain name (e.g. domain.test, if you want to get domain.test/subdir/test.html links)
 // Returns found links with newlines ('\n') between them
-char* GetLinksFromWebPage(const char* myhtmlpage, const char* myurl) {
+linkcontainer_t* GetLinksFromWebPage(const char* myhtmlpage, const char* myurl) {
     return parseWithAttributeCallback(myhtmlpage, myurl, callback_link);
 }

@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
-char* GetLinksFromWebPage(const char* myhtmlpage, const char* myurl);
+#include "retriever/structs/linkcontainer/linkcontainer.h"
+
+linkcontainer_t* GetLinksFromWebPage(const char* myhtmlpage, const char* myurl);
 #ifdef __cplusplus
 }
 #endif

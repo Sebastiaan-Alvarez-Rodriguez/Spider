@@ -5,8 +5,10 @@
 #include <sstream>
 #include <iostream>
 
+#include "mapper/mapper.h"
 #include "tree/tree.h"
 #include "retriever/retriever.h"
+#include "retriever/structs/linkcontainer/linkcontainer.h"
 
 //TODO list:
 // Implement better tree structure? Library: https://github.com/algorithm-ninja/cpp-btree
@@ -16,16 +18,16 @@
 
 
 //Takes a list of urls, separated by '\n', and returns a set containing these urls in form std::string
-static auto segment(const char* const sentence) {
-    std::set<std::string> ret;
+// static auto segment(const char* const sentence) {
+//     std::set<std::string> ret;
 
-    std::stringstream ss(sentence);
-    std::string to;
+//     std::stringstream ss(sentence);
+//     std::string to;
     
-    while(std::getline(ss,to,'\n'))
-        ret.insert(to);
-    return ret;
-}
+//     while(std::getline(ss,to,'\n'))
+//         ret.insert(to);
+//     return ret;
+// }
 
 // Fetch an unvisited url, in a Breadth First Search pattern. 
 // Returns true on success, false if the queue gets empty before finding an unvisited url.
@@ -43,10 +45,6 @@ static bool fetch(std::string& visit_url, Tree& visited, std::queue<std::string>
     return true;
 }
 
-
-//With set difference -> Up to O(n)
-// If I check difference between visited and to_visit every iteration
-// But I do too much work then... The to_visit set is always legitimate, but it is too when I just merge...
 static void crawl(const char* start_url, unsigned long long stop_after) {
     Tree visited;
 
@@ -60,14 +58,14 @@ static void crawl(const char* start_url, unsigned long long stop_after) {
 
         std::cout << "Visiting url "<<x<<": " << visit_url;
 
-        char* urllinks = GetLinksFromWebPage(visit_url.c_str(), visit_url.c_str());
+        linkcontainer_t* urllinks = GetLinksFromWebPage(visit_url.c_str(), visit_url.c_str());
         if (urllinks != NULL) {
-            auto linkset = segment(urllinks);
-            free(urllinks);
-            std::cout << ". Found "<<linkset.size()<<" links:"<<std::endl;
-            for (const auto& url : linkset) {
-                std::cout << url << '\n';
-                to_visit.push(url); //No need to check if url was visited already. fetch() function does that already
+            // auto linkset = segment(urllinks);
+            // free(urllinks);
+            std::cout << ". Found "<<urllinks->used<<" links:"<<std::endl;
+            for (size_t x = 0; x < urllinks->used; ++x) {
+                std::cout << urllinks->urls[x] << '\n';
+                to_visit.push(std::string(urllinks->urls[x])); //No need to check if url was visited already. fetch() function does that already
             }
         }
     }
