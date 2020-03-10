@@ -6,8 +6,9 @@
 #include <haut/tag.h>
 
 #include "callbacks.h"
-#include "../structs/linkcontainer/linkcontainer.h"
-#include "../structs/html.h"
+#include "retriever/structs/linkcontainer/linkcontainer.h"
+#include "retriever/structs/html.h"
+#include "retriever/structs/url/url.h"
 
 static int callback_contains_get_variable(const char* const str, size_t len) {
     for (size_t x = 0; x < len; ++x)
@@ -42,10 +43,6 @@ void callback_link(haut_t* p, strfragment_t* key, strfragment_t* value) {
     if (haut_currentElementTag(p) == TAG_TITLE && value && value->data && value->size > 0) {
         printf("OOF I GOT A TITLE\n");
         container_changetitle(container, value->data, value->size);
-        int tmp = 0;
-        int ool = 1;
-
-
     } else if(haut_currentElementTag(p) == TAG_A && strfragment_icmp(key, "href") && value && value->data && value->size > 0) {
         if (value->data[0] == '#' || (value->data[0] == '/' && value->size==1)) //Self referencing url tag. Should skip
             return;
@@ -64,14 +61,15 @@ void callback_link(haut_t* p, strfragment_t* key, strfragment_t* value) {
         if (link_is_relative)
             size += container->baselen;
 
-        char* url = malloc((size+1)*sizeof(char)); //+1 for the \0
+        url_t url;
+        url.url = malloc(size*sizeof(char));
         if (link_is_relative) {
-            strcpy(url, container->base); //copy base url
-            strncat(url, value->data, size-container->baselen); //copy relative part
+            memcpy(url.url, container->base, container->baselen); //copy base url
+            memcpy((url.url+container->baselen), value->data, size-container->baselen); //copy relative part
         } else {
-            strncpy(url, value->data, size);
+            memcpy(url.url, value->data, size);
         }
-        url[size] = '\0';
-        container_insert(container, url);
+        url.len = size;
+        container_insert(container, &url);
     }
 }

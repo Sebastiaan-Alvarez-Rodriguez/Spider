@@ -10,9 +10,10 @@ extern "C" {
 #include <stdbool.h>
 #include <string.h>
 
+#include "retriever/structs/url/url.h"
 // Structure to communicate between caller and callback for link collecting
 typedef struct {
-    char** urls;
+    url_t* urls;
     size_t used, len;
     char* base;
     size_t baselen;
@@ -23,7 +24,7 @@ void container_create(linkcontainer_t* container, size_t initial_capacity, const
 
 void container_changetitle(linkcontainer_t* container, const char* const title, size_t len);
 
-bool container_insert(linkcontainer_t* container, char* url);
+bool container_insert(linkcontainer_t* container, url_t* url);
 
 // void container_insert(linkcontainer_t* container, const char* const title, const char* const url) {
 

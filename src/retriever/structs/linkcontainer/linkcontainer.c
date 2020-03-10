@@ -2,10 +2,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "retriever/structs/url/url.h"
 #include "linkcontainer.h"
 
 void container_create(linkcontainer_t* container, size_t initial_capacity, const char* const base) {
-    container->urls = (char**) malloc(initial_capacity*sizeof(char*));
+    container->urls = malloc(initial_capacity*sizeof(url_t));
     container->used = 0;
     container->len = initial_capacity;
 
@@ -20,16 +21,17 @@ void container_changetitle(linkcontainer_t* container, const char* const title, 
     strcpy(container->title, title);
 }
 
-bool container_insert(linkcontainer_t* container, char* url) {
+bool container_insert(linkcontainer_t* container, url_t* url) {
     if (container->used == container->len) {
-        char** tmp = (char**) realloc(container->urls, 2*container->len);
+        url_t* tmp = (url_t*) realloc(container->urls, 2*container->len);
         if (tmp == NULL)
             return false;
         container->urls = tmp;
         container->len *= 2;
     }
 
-    container->urls[container->used] = url;
+    container->urls[container->used].url = url->url;
+    container->urls[container->used].len = url->len;
     ++container->used;
     return true;
 }
@@ -40,7 +42,7 @@ bool container_insert(linkcontainer_t* container, char* url) {
 
 void container_destroy(linkcontainer_t* container) {
     for (size_t x = 0; x < container->used; ++x)
-        free(container->urls[x]);
+        url_destroy(&(container->urls[x]));
     free(container->urls);
     free(container->base);
     free(container->title);

@@ -1,7 +1,7 @@
 #ifndef URL_H
 #define URL_H
 
-#include <iostream>
+#include <ostream>
 #include <string>
 
 struct Url {

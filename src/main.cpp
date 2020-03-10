@@ -47,7 +47,11 @@ static bool fetch(std::string& visit_url, Tree& visited, std::queue<std::string>
 
 static void map(std::string urlstring, std::string title) {
     Url url = Url(urlstring, title);
-    storeReverseIndex(url, getIndex(url));
+    auto w = getIndex(url);
+    for (const auto& x : w)
+        std::cout <<x<<", ";
+    std::cout<<std::endl;
+    storeReverseIndex(url, w);
 }
 
 static void crawl(const char* start_url, unsigned long long stop_after) {
@@ -65,23 +69,22 @@ static void crawl(const char* start_url, unsigned long long stop_after) {
 
         linkcontainer_t* urllinks = GetLinksFromWebPage(visit_url.c_str(), visit_url.c_str());
         if (urllinks != NULL) {
-            // auto linkset = segment(urllinks);
-            // free(urllinks);
             if (urllinks->title == NULL)
                 std::cout <<". No title found!\n";
             else
                 std::cout << ". Found title '"<<urllinks->title <<"'.\n";
             std::cout <<"Found "<<urllinks->used<<" links"<<std::endl;
             for (size_t x = 0; x < urllinks->used; ++x) {
-                map(std::string(urllinks->urls[x]), urllinks->title == NULL ? "" : std::string(urllinks->title));
-                to_visit.push(std::string(urllinks->urls[x])); //No need to check if url was visited already. fetch() function does that already
+                std::string url = std::string(urllinks->urls[x].url, urllinks->urls[x].len);
+                to_visit.push(std::string(url)); //No need to check if url was visited already. fetch() function does that already
             }
+            map(visit_url, urllinks->title == NULL ? "" : std::string(urllinks->title));
             container_destroy(urllinks);
+            free(urllinks);
         }
         std::cout << '\n';
     }
 }
-
 
 // Simple function to display information in case someone did not provide the right amount of parameters
 static void usage(const char* name) {
