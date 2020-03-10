@@ -56,7 +56,7 @@ static linkcontainer_t* parseWithAttributeCallback(const char* myhtmlpage, const
 
     haut_t parser;
     haut_init(&parser);
-    parser.userdata = &container;
+    parser.userdata = container;
     parser.events.attribute = function;
     
     haut_setInput(&parser, html, len);

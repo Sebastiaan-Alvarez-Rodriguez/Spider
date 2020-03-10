@@ -4,7 +4,7 @@ SRC  = src
 OBJ  = obj
 LIB  = libs
 
-EXEC       = awc
+EXEC       = spider
 WARNINGS   = -Wall -Wextra -pedantic
 NOWARNINGS = -w
 DEBUG      = -g

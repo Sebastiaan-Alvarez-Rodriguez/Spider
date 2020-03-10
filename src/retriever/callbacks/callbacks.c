@@ -40,9 +40,14 @@ void callback_link(haut_t* p, strfragment_t* key, strfragment_t* value) {
     linkcontainer_t* container = (linkcontainer_t*) p->userdata;
 
     if (haut_currentElementTag(p) == TAG_TITLE && value && value->data && value->size > 0) {
+        printf("OOF I GOT A TITLE\n");
         container_changetitle(container, value->data, value->size);
+        int tmp = 0;
+        int ool = 1;
+
+
     } else if(haut_currentElementTag(p) == TAG_A && strfragment_icmp(key, "href") && value && value->data && value->size > 0) {
-        if (value->data[0] == '#') //Self referencing url tag. Should skip
+        if (value->data[0] == '#' || (value->data[0] == '/' && value->size==1)) //Self referencing url tag. Should skip
             return;
         if (value->data[0] == 't' && value->data[1] != 'e' && value->data[2] != 'l' && value->data[3] == ':') // I noticed someone annoying put a tel:<telephone number here> inside a <a href=""/>
             return;
@@ -59,14 +64,14 @@ void callback_link(haut_t* p, strfragment_t* key, strfragment_t* value) {
         if (link_is_relative)
             size += container->baselen;
 
-
-        char* url = malloc(size*sizeof(char));
+        char* url = malloc((size+1)*sizeof(char)); //+1 for the \0
         if (link_is_relative) {
             strcpy(url, container->base); //copy base url
             strncat(url, value->data, size-container->baselen); //copy relative part
         } else {
             strncpy(url, value->data, size);
         }
+        url[size] = '\0';
         container_insert(container, url);
     }
 }

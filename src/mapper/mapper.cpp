@@ -15,9 +15,6 @@ static int getSeparatorPos(const std::string& str, char sep) {
     return -1;
 }
 
-// Takes a url and its keywords. Stores the url at all files with a keyword
-// If you want to reverse-index then, all you have to do is open the file
-// matching a keyword, and read its contents for the relevant urls.
 bool storeReverseIndex(Url url, std::vector<std::string> keywords) {
     std::experimental::filesystem::create_directory("indexed/");
     for (std::string keyword : keywords) {

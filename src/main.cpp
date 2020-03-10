@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "mapper/url/url.h"
 #include "mapper/mapper.h"
 #include "tree/tree.h"
 #include "retriever/retriever.h"
@@ -37,12 +38,16 @@ static bool fetch(std::string& visit_url, Tree& visited, std::queue<std::string>
             return false;
         visit_url = to_visit.front();
         to_visit.pop();
-        ;
     } while (!visited.insert(visit_url)); 
     // Note: insert(), right above this line, only returns true if the url did not yet exist.
     // So, this loops continues until an unvisited url is found (which is then inserted in visited)
     // or until there are no more urls to try
     return true;
+}
+
+static void map(std::string urlstring, std::string title) {
+    Url url = Url(urlstring, title);
+    storeReverseIndex(url, getIndex(url));
 }
 
 static void crawl(const char* start_url, unsigned long long stop_after) {
@@ -62,12 +67,18 @@ static void crawl(const char* start_url, unsigned long long stop_after) {
         if (urllinks != NULL) {
             // auto linkset = segment(urllinks);
             // free(urllinks);
-            std::cout << ". Found "<<urllinks->used<<" links:"<<std::endl;
+            if (urllinks->title == NULL)
+                std::cout <<". No title found!\n";
+            else
+                std::cout << ". Found title '"<<urllinks->title <<"'.\n";
+            std::cout <<"Found "<<urllinks->used<<" links"<<std::endl;
             for (size_t x = 0; x < urllinks->used; ++x) {
-                std::cout << urllinks->urls[x] << '\n';
+                map(std::string(urllinks->urls[x]), urllinks->title == NULL ? "" : std::string(urllinks->title));
                 to_visit.push(std::string(urllinks->urls[x])); //No need to check if url was visited already. fetch() function does that already
             }
+            container_destroy(urllinks);
         }
+        std::cout << '\n';
     }
 }
 

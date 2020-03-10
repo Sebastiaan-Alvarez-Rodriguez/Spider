@@ -6,9 +6,10 @@
 
 void container_create(linkcontainer_t* container, size_t initial_capacity, const char* const base) {
     container->urls = (char**) malloc(initial_capacity*sizeof(char*));
+    container->used = 0;
     container->len = initial_capacity;
 
-    container->baselen = strlen(base);
+    container->baselen = strlen(base)+1; //+1 is for \0
     container->base = (char*) malloc(container->baselen*sizeof(char));
     strcpy(container->base, base);
     container->title = NULL;
@@ -25,6 +26,7 @@ bool container_insert(linkcontainer_t* container, char* url) {
         if (tmp == NULL)
             return false;
         container->urls = tmp;
+        container->len *= 2;
     }
 
     container->urls[container->used] = url;
