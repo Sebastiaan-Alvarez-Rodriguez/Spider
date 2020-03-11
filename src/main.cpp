@@ -78,10 +78,10 @@ static void crawl(const char* start_url, unsigned long long stop_after) {
                 std::string url = std::string(urllinks->urls[x].url, urllinks->urls[x].len);
                 to_visit.push(std::string(url)); //No need to check if url was visited already. fetch() function does that already
             }
-            map(visit_url, urllinks->title == NULL ? "" : std::string(urllinks->title));
-            container_destroy(urllinks);
-            free(urllinks);
         }
+        map(visit_url, urllinks->title == NULL ? "" : std::string(urllinks->title));
+        container_destroy(urllinks);
+        free(urllinks);
         std::cout << '\n';
     }
 }

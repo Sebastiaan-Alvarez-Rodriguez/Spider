@@ -10,9 +10,9 @@ void container_create(linkcontainer_t* container, size_t initial_capacity, const
     container->used = 0;
     container->len = initial_capacity;
 
-    container->baselen = strlen(base)+1; //+1 is for \0
+    container->baselen = strlen(base); //+1 is for \0
     container->base = (char*) malloc(container->baselen*sizeof(char));
-    strcpy(container->base, base);
+    memcpy(container->base, base, container->baselen);
     container->title = NULL;
 }
 
@@ -23,13 +23,12 @@ void container_changetitle(linkcontainer_t* container, const char* const title, 
 
 bool container_insert(linkcontainer_t* container, url_t* url) {
     if (container->used == container->len) {
-        url_t* tmp = (url_t*) realloc(container->urls, 2*container->len);
+        url_t* tmp = (url_t*) realloc(container->urls, 2*container->len*sizeof(url_t));
         if (tmp == NULL)
             return false;
         container->urls = tmp;
         container->len *= 2;
     }
-
     container->urls[container->used].url = url->url;
     container->urls[container->used].len = url->len;
     ++container->used;
