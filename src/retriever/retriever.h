@@ -5,9 +5,11 @@
 extern "C" {
 #endif
 
-#include "retriever/structs/linkcontainer/linkcontainer.h"
+#include "retriever/structs/container/container.h"
 
-linkcontainer_t* GetLinksFromWebPage(const char* myhtmlpage, const char* myurl);
+size_t StoreImages(const container_t* container, size_t start_nr);
+
+container_t* GetDataFromWebPage(const char* myhtmlpage, const char* myurl);
 #ifdef __cplusplus
 }
 #endif

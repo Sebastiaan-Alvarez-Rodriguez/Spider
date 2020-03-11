@@ -4,7 +4,9 @@ SRC  = src
 OBJ  = obj
 LIB  = libs
 
-EXEC       = spider
+SPIDEREXEC = webspider
+QUERYEXEC  = webquery
+
 WARNINGS   = -Wall -Wextra -pedantic
 NOWARNINGS = -w
 DEBUG      = -g
@@ -44,7 +46,9 @@ find = $(shell find $1 -type f -name $2 -print 2>/dev/null)
 CSRCS := $(call find, $(SRC)/, "*.c")
 COBJS := $(CSRCS:%.c=$(OBJ)/%.o)
 
-CXXSRCS := $(call find, $(SRC)/, "*.cpp")
+
+EXCL := src/spider/main.cpp src/query/main.cpp
+CXXSRCS := $(filter-out $(EXCL),$(call find, $(SRC)/, "*.cpp"))
 CXXOBJS := $(CXXSRCS:%.cpp=$(OBJ)/%.o)
 
 CLEAR  = [0m
@@ -59,17 +63,17 @@ FAST := $(filter fast,$(MAKECMDGOALS))
 
 xoutofy = $(or $(eval PROCESSED := $(PROCESSED) .),$(info $(WHITE)[$(YELLOW)$(words $(PROCESSED))$(WHITE)] $1$(CLEAR)))
 
-.PHONY: debug fast
+.PHONY: spider query debug fast
 
 # Requests object creation, links, builds debug executable
-debug: lib $(COBJS) $(CXXOBJS)
-	@$(call xoutofy,$(GREEN)Linking debug $(EXEC))
-	$(CXX) $(CXXFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
+spider: lib $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o
+	@$(call xoutofy,$(GREEN)Linking $(if $(FAST),fast,debug) $(SPIDEREXEC))
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o -o $(SPIDEREXEC) $(LIBS) $(LDIRS)
 
 # Requests object creation, links, builds fast executable
-fast: lib $(COBJS) $(CXXOBJS)
-	@$(call xoutofy,$(GREEN)Linking fast $(EXEC))
-	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) -o $(EXEC) $(LIBS) $(LDIRS)
+query: lib $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o
+	@$(call xoutofy,$(GREEN)Linking $(if $(FAST),fast,debug) $(QUERYEXEC))
+	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o -o $(QUERYEXEC) $(LIBS) $(LDIRS)
 
 # Compiles haut library
 lib: $(COBJS)
@@ -100,7 +104,7 @@ $(OBJ):
 
 clean:
 	@echo Cleaning...
-	@rm -rf $(OBJ) $(LIB) $(EXEC)
+	@rm -rf $(OBJ) $(LIB) $(SPIDEREXEC) $(QUERYEXEC)
 	@echo Done!
 
 git: clean

@@ -1,5 +1,7 @@
 *.pdf
 /obj
 /libs
-spider
+/webspider
+/webquery
 /indexed
+/pics

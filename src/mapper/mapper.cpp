@@ -4,7 +4,6 @@
 
 #include <experimental/filesystem>
 #include <fstream>
-#include <iostream>
 
 #include "mapper/url/url.h"
 #include "mapper.h"
@@ -19,7 +18,6 @@ static int getSeparatorPos(const std::string& str, char sep) {
 bool storeReverseIndex(Url url, std::vector<std::string> keywords) {
     std::experimental::filesystem::create_directory("indexed/");
     for (std::string keyword : keywords) {
-        std::cout << "Processing keyword: "<<keyword<<"\n";
         std::ofstream out("indexed/"+keyword, std::ios::out|std::ios::app);
         if (!out.is_open())
             return false;
@@ -55,7 +53,6 @@ std::vector<std::string> getIndex(Url url) {
     return result;
 }
 
-
 // Give a keyword as parameter. Returns (hopefully) relevant url's
 std::vector<Url> getRelevantUrls(std::string keyword) {
     std::vector<Url> result;
@@ -73,4 +70,8 @@ std::vector<Url> getRelevantUrls(std::string keyword) {
         }
     }
     return result;
+}
+
+bool hasReverseIndex() {
+    return std::experimental::filesystem::exists("indexed/");
 }
