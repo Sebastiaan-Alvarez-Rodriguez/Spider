@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <string.h>
+
+#include <iostream>
 #include <experimental/filesystem>
 #include <queue>
 #include <vector>
@@ -72,15 +74,19 @@ int main(int argc, char *argv[]) {
 
     IplImage* query = read_jpeg_file(argv[1]);
 
-    std::priority_queue<std::pair<std::string, unsigned>, std::vector<std::pair<std::string, unsigned>>, std::greater<std::pair<std::string, unsigned>>> list; 
+    std::priority_queue<std::pair<std::string, unsigned>, std::vector<std::pair<std::string, unsigned>>, std::greater<std::pair<std::string, unsigned>>> queue; 
 
     for(const auto& p : std::experimental::filesystem::directory_iterator("pics/")) {
         IplImage* other = read_jpeg_file((char*)p.path().c_str());
-        list.push(std::make_pair(p.path(), get_ransac_matches(query, other)));
+        queue.push(std::make_pair(p.path(), get_ransac_matches(query, other)));
         cvReleaseImage(&other);
     }
-
     cvReleaseImage(&query);
+
+    while(!queue.empty()) {
+        std::cout << queue.top().first << '\n';
+        queue.pop();
+    }
 
     return 0;
 }
