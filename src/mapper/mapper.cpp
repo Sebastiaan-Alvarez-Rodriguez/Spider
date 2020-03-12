@@ -75,3 +75,7 @@ std::vector<Url> getRelevantUrls(std::string keyword) {
 bool hasReverseIndex() {
     return std::experimental::filesystem::exists("indexed/");
 }
+
+bool hasPics() {
+    return std::experimental::filesystem::exists("pics/");
+}

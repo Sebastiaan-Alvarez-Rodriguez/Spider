@@ -17,6 +17,9 @@ std::vector<std::string> getIndex(Url url);
 // Give a keyword as parameter. Returns (hopefully) relevant url's
 std::vector<Url> getRelevantUrls(std::string keyword);
 
-// Returns whether we have a mapping. If we don't, we should create one
+// Returns whether we have a mapping
 bool hasReverseIndex();
+
+// Returns whether we have a pictures directory
+bool hasPics();
 #endif

@@ -6,13 +6,14 @@ LIB  = libs
 
 SPIDEREXEC = webspider
 QUERYEXEC  = webquery
+PICEXEC    = piccompare
 
 WARNINGS   = -Wall -Wextra -pedantic
 NOWARNINGS = -w
 DEBUG      = -g
 
-IDIRS = -I$(SRC) -I$(SRC)/haut-html/include
-LIBS  =  -lrt -lpthread -lhaut -lcurl -lstdc++fs
+IDIRS = -I$(SRC) -I$(SRC)/lib/haut-html/include
+LIBS  =  -lrt -lpthread -lhaut -lcurl -lstdc++fs -ljpeg -lm
 LDIRS = -L$(LIB)
 
 CFLAGS     = $(IDIRS) -std=c11 $(WARNINGS) $(DEBUG)
@@ -41,14 +42,23 @@ CXXFASTFLAGS = $(IDIRS) -std=c++17 \
 	-fno-trapping-math \
 	-funroll-loops
 
-find = $(shell find $1 -type f -name $2 -print 2>/dev/null)
+# find = $(shell find $1 -type f -name $2 -print 2>/dev/null)
+find = $(shell find $1 -type f ! -path $3 -name $2 -print 2>/dev/null)
+findonly = $(shell find $1 -type f -path $3 -name $2 -print 2>/dev/null)
 
-CSRCS := $(call find, $(SRC)/, "*.c")
+
+
+CSRCS := $(call find, $(SRC)/, "*.c", "$(SRC)/lib/*")
 COBJS := $(CSRCS:%.c=$(OBJ)/%.o)
 
+HAUTSRCS := $(call findonly, $(SRC)/, "*.c", "$(SRC)/lib/haut-html/*")
+HAUTOBJS := $(HAUTSRCS:%.c=$(OBJ)/%.o)
 
-EXCL := src/spider/main.cpp src/query/main.cpp
-CXXSRCS := $(filter-out $(EXCL),$(call find, $(SRC)/, "*.cpp"))
+PICSRCS := $(call findonly, $(SRC)/, "*.cpp", "$(SRC)/lib/piccompare/*")
+PICOBJS := $(PICSRCS:%.cpp=$(OBJ)/%.o)
+
+EXCL := $(SRC)/spider/main.cpp $(SRC)/query/main.cpp $(SRC)/pic/main.cpp
+CXXSRCS := $(filter-out $(EXCL),$(call find, $(SRC)/, "*.cpp", "$(SRC)/lib/*"))
 CXXOBJS := $(CXXSRCS:%.cpp=$(OBJ)/%.o)
 
 CLEAR  = [0m
@@ -63,29 +73,48 @@ FAST := $(filter fast,$(MAKECMDGOALS))
 
 xoutofy = $(or $(eval PROCESSED := $(PROCESSED) .),$(info $(WHITE)[$(YELLOW)$(words $(PROCESSED))$(WHITE)] $1$(CLEAR)))
 
-.PHONY: spider query debug fast
+.PHONY: spider query pic debug fast git clean
 
-# Requests object creation, links, builds debug executable
-spider: lib $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o
+fast: all
+
+debug: all
+
+all: spider query pic
+
+spider: haut $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o
 	@$(call xoutofy,$(GREEN)Linking $(if $(FAST),fast,debug) $(SPIDEREXEC))
-	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o -o $(SPIDEREXEC) $(LIBS) $(LDIRS)
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/spider/main.o -o $(SPIDEREXEC) -lrt -lpthread -lhaut -lcurl -lstdc++fs $(LDIRS)
 
-# Requests object creation, links, builds fast executable
-query: lib $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o
+query: haut $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o
 	@$(call xoutofy,$(GREEN)Linking $(if $(FAST),fast,debug) $(QUERYEXEC))
-	$(CXX) $(CXXFASTFLAGS) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o -o $(QUERYEXEC) $(LIBS) $(LDIRS)
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/query/main.o -o $(QUERYEXEC) -lrt -lpthread -lhaut -lcurl -lstdc++fs $(LDIRS)
+
+# Compiles piccompare executable
+pic: $(PICOBJS) $(COBJS) $(CXXOBJS) $(OBJ)/$(SRC)/pic/main.o
+	@$(call xoutofy,$(GREEN)Linking $(if $(FAST),fast,debug) $(PICEXEC))
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(PICOBJS) $(CXXOBJS) $(OBJ)/$(SRC)/pic/main.o -o $(PICEXEC) -ljpeg -lm -lstdc++fs
 
 # Compiles haut library
-lib: $(COBJS)
+haut: $(HAUTOBJS)
 	@$(call xoutofy,$(YELLOW)Linking haut library)
 	mkdir -p $(LIB)
-	ar rcs $(LIB)/libhaut.a $(OBJ)/$(SRC)/haut-html/src/haut.o $(OBJ)/$(SRC)/haut-html/src/string_util.o $(OBJ)/$(SRC)/haut-html/src/state_machine.o
+	ar rcs $(LIB)/libhaut.a $(HAUTOBJS)
 
-# Makes library warnings shut up!
-$(OBJ)/$(SRC)/haut-html/%.o: $(SRC)/haut-html/%.c
+# Makes haut library warnings shut up!
+$(OBJ)/$(SRC)/lib/haut-html/%.o: $(SRC)/lib/haut-html/%.c
 	@$(call xoutofy,$(CYAN)Compiling $<)
 	@mkdir -p $(dir $@)
 	$(CC) $(if $(FAST),$(CFASTFLAGS),$(CFLAGS)) $(NOWARNINGS) -o $@ -c $<
+
+# Makes sift library warnings shut up!
+$(OBJ)/$(SRC)/lib/piccompare/%.o: $(SRC)/lib/piccompare/%.cpp
+	@$(call xoutofy,$(CYAN)Compiling $<)
+	@mkdir -p $(dir $@)
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(NOWARNINGS) -o $@ -c $<
+$(OBJ)/$(SRC)/pic/main.o: $(SRC)/pic/main.cpp
+	@$(call xoutofy,$(CYAN)Compiling $<)
+	@mkdir -p $(dir $@)
+	$(CXX) $(if $(FAST),$(CXXFASTFLAGS),$(CXXFLAGS)) $(NOWARNINGS) -o $@ -c $<
 
 # Compiles regular c files
 $(OBJ)/%.o: %.c
@@ -104,7 +133,7 @@ $(OBJ):
 
 clean:
 	@echo Cleaning...
-	@rm -rf $(OBJ) $(LIB) $(SPIDEREXEC) $(QUERYEXEC)
+	@rm -rf $(OBJ) $(LIB) $(SPIDEREXEC) $(QUERYEXEC) $(PICEXEC)
 	@echo Done!
 
 git: clean
