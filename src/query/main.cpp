@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
         return -1;
 
     for (const auto& url : getRelevantUrls(argv[1])) {
-        std::cout << url.url << '\n';
+        std::cout << url.url << '\t' << url.title << '\n';
     }
     return 0;
 }
