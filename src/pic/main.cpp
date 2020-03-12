@@ -27,10 +27,10 @@
 // minimum number of matches to even start ransac
 #define MIN_MATCHES_FOR_RANSAC 4
 
-static unsigned get_ransac_matches(IplImage* image1, IplImage* image2) {
-    struct feature* feat1, *feat2;
-    unsigned n1 = sift_features(image1, &feat1);
-    unsigned n2 = sift_features(image2, &feat2);
+// Returns number of matches between 2 given feature structs
+// We do not pass images here, because then we have to recompute source features every call
+static unsigned get_ransac_matches(struct feature* feat1, unsigned n1, struct feature* feat2, unsigned n2) {
+    
 
     struct kd_node* kd_root = kdtree_build(feat2, n2);    
 
@@ -55,9 +55,6 @@ static unsigned get_ransac_matches(IplImage* image1, IplImage* image2) {
     ransac_xform(feat1, n1, FEATURE_FWD_MATCH, lsq_homog, MIN_MATCHES_FOR_RANSAC, 0.25, homog_xfer_err, 27.0, &RANnb, &number);    
 
     kdtree_release(kd_root);
-    free(feat1);
-    free(feat2);
-
     return (unsigned) number;
 }
 
@@ -73,15 +70,25 @@ int main(int argc, char *argv[]) {
         return -1;
 
     IplImage* query = read_jpeg_file(argv[1]);
+    struct feature* queryfeat;
+    const unsigned n1 = sift_features(query, &queryfeat);
 
-    std::priority_queue<std::pair<std::string, unsigned>, std::vector<std::pair<std::string, unsigned>>, std::greater<std::pair<std::string, unsigned>>> queue; 
+    auto compare = [](std::pair<std::string, unsigned> lhs, std::pair<std::string, unsigned> rhs) {
+                        return lhs.second < rhs.second;
+                    };
+
+    std::priority_queue<std::pair<std::string, unsigned>, std::vector<std::pair<std::string, unsigned>>, decltype(compare)> queue(compare); 
 
     for(const auto& p : std::experimental::filesystem::directory_iterator("pics/")) {
         IplImage* other = read_jpeg_file((char*)p.path().c_str());
-        queue.push(std::make_pair(p.path(), get_ransac_matches(query, other)));
+        struct feature* otherfeat;
+        const unsigned n2 = sift_features(other, &otherfeat);
+        queue.push(std::make_pair(p.path(), get_ransac_matches(queryfeat, n1, otherfeat, n2)));
         cvReleaseImage(&other);
+        free(otherfeat);
     }
     cvReleaseImage(&query);
+    free(queryfeat);
 
     while(!queue.empty()) {
         std::cout << queue.top().first << '\n';
