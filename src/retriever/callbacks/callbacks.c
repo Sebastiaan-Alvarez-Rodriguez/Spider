@@ -42,15 +42,11 @@ size_t callback_write(char* buffer, size_t size, size_t nmemb, html_t* html) {
     return realsize;
 }
 
-void callback_element_parsed(haut_t* p, strfragment_t* key, strfragment_t* value) {
-    container_t* container = (container_t*) p->userdata;
-
-    if (haut_currentElementTag(p) == TAG_TITLE && value && value->data && value->size > 0) {
-        printf("OOF I GOT A TITLE\n");
-        container_changetitle(container, value->data, value->size);
-    } else if((haut_currentElementTag(p) == TAG_A && strfragment_icmp(key, "href") && value && value->data && value->size > 0)
+void callback_attribute(haut_t* p, strfragment_t* key, strfragment_t* value) {
+    if((haut_currentElementTag(p) == TAG_A && strfragment_icmp(key, "href") && value && value->data && value->size > 0)
         || ((haut_currentElementTag(p) == TAG_IMG || haut_currentElementTag(p) == TAG_IMAGE) && strfragment_icmp(key, "src") && value && value->data && value->size > 0)) {
 
+        container_t* container = (container_t*) p->userdata;
         size_t size = (size_t) value->size;
         bool link_is_relative = value->data[0] == '/';
 
@@ -88,5 +84,12 @@ void callback_element_parsed(haut_t* p, strfragment_t* key, strfragment_t* value
             container_insert_link(container, &url);
         else
             container_insert_image(container, &url);
+    }
+}
+
+void callback_inner_text(haut_t* p, strfragment_t* text) {
+    if (haut_currentElementTag(p) == TAG_TITLE) {
+        container_t* container = (container_t*) p->userdata;
+        container_changetitle(container, text->data, text->size);
     }
 }

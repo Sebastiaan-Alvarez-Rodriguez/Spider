@@ -20,14 +20,17 @@ class MyHandler(BaseHTTPRequestHandler):
                 </div>'.format(url, title)
 
     def query_process(self, query):
-        returnstring = '<html><body><center><p><br><p><br><font face=arial size=7 color=darkblue>LIACS Search Results</font></center><div style="margin-left: 180px; font-family: arial,sans-serif;">'
+        returnstring = '<html><body><center><p><br><p><br><font face=arial size=7 color=darkblue>LIACS Search Results</font><p><form enctype="multipart/form-data" action="/query" method="post"><input name="query" size="60" value={0}><input name="search" value="search" type="submit"></form></center><p><div style="margin-left: 180px; font-family: arial,sans-serif;">'.format(query)
         try:
             output = bytes.decode(subprocess.check_output(['./webquery', query]))
-            for url_and_title in output.splitlines():
-                url, title = url_and_title.split('\t', 1)
-                if len(title) == 0:
-                    title = 'No title'
-                returnstring += self.query_create_result(url, title)
+            if len(output) == 0:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">No results found.</div>'
+            else:
+                for url_and_title in output.splitlines():
+                    url, title = url_and_title.split('\t', 1)
+                    if len(title) == 0:
+                        title = 'No title'
+                    returnstring += self.query_create_result(url, title)
         except Exception as e: # We get here if we have not crawled yet
             returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">We have not crawled the internet yet. Please try again soon!</div>'
 
@@ -50,13 +53,23 @@ class MyHandler(BaseHTTPRequestHandler):
         querypath = os.path.join('uploaded', file.filename)
         with open(querypath, 'wb') as fout:
             shutil.copyfileobj(file.file, fout, 100000)
-
+        
         try:
             output = bytes.decode(subprocess.check_output(['./piccompare', querypath]))
-            for path in output.splitlines():
-                returnstring += self.imagequery_create_result(path)
-        except Exception as e: # We get here if we have not crawled yet
-            returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">We have not crawled the internet yet. Please try again soon!</div>'
+            if len(output) == 0:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">No results found.</div>'
+            else:
+                for path in output.splitlines():
+                    returnstring += self.imagequery_create_result(path)
+        except subprocess.CalledProcessError as e: # We get here if we have not crawled yet
+            if e.returncode == -1:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">An unknown exception has occured. Try again soon.</div>'
+            elif e.returncode == -2:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">We have not crawled the internet yet. Please try again soon!</div>'
+            elif e.returncode == -3:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">Expected JPG/JPEG image. Got something else!</div>'
+            elif e.returncode == -4:
+                returnstring += '<div style="font-size: normal; line-height: 1.57; color: #222">Provided image has too few image features to do sensible reverse image search!</div>'
 
         returnstring += '</div></body></html>'
         return returnstring

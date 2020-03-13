@@ -16,16 +16,30 @@ void container_create(container_t* container, size_t initial_capacity, const cha
     container->used_imgs = 0;
     container->len_imgs = initial_capacity;
 
-    // Store base url and prepare title storage
+    // Store base url
     container->baselen = strlen(base); //+1 is for \0
     container->base = (char*) malloc(container->baselen*sizeof(char));
     memcpy(container->base, base, container->baselen);
-    container->title = NULL;
+
+    // Prepare title storage
+    container->title = malloc(64 * sizeof(char));
+    container->used_title = 0;
+    container->len_title = 64;
 }
 
 void container_changetitle(container_t* container, const char* const title, size_t len) {
-    container->title = (char*) realloc(container->title, len*sizeof(char));
-    strcpy(container->title, title);
+    if (container->used_title + len + 1 > container->len_title) {
+        container->title = realloc(container->title, 2*container->len_title*sizeof(char));
+        container->len_title *= 2;
+    }
+    memcpy((container->title + container->used_title), title, len);
+    container->used_title += len+1;
+    container->title[container->used_title-1]=' ';
+}
+
+void container_fixtrailingspace(container_t* container) {
+    if (container->used_title != 0)
+        container->used_title -= 1;
 }
 
 bool container_insert_link(container_t* container, url_t* url) {
@@ -55,10 +69,6 @@ bool container_insert_image(container_t* container, url_t* url) {
     ++container->used_imgs;
     return true;
 }
-
-// void container_insert(container_t* container, const char* const title, const char* const url) {
-
-// }
 
 void container_destroy(container_t* container) {
     for (size_t x = 0; x < container->used_urls; ++x)

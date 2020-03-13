@@ -51,16 +51,20 @@ static void crawl(const char* start_url, unsigned long long stop_after) {
 
         container_t* container = GetDataFromWebPage(visit_url.c_str(), visit_url.c_str());
         if (container != NULL) {
-            if (container->title == NULL)
+            if (container->used_title == 0) {
                 std::cout <<". No title found!\n";
-            else
-                std::cout << ". Found title '"<<container->title <<"'.\n";
+            } else {
+                std::cout << ". Found title '";
+                std::cout.write(container->title, container->used_title);
+                std::cout <<"'.\n";
+            }
+            
             std::cout <<"Found "<<container->used_urls<<" links and "<<container->used_imgs<<" jpg-images"<<std::endl;
             for (size_t x = 0; x < container->used_urls; ++x) {
                 std::string url = std::string(container->urls[x].url, container->urls[x].len);
                 to_visit.push(std::string(url)); //No need to check if url was visited already. fetch() function does that already
             }
-            map(visit_url, container->title == NULL ? "" : std::string(container->title));
+            map(visit_url, container->used_title == 0 ? "" : std::string(container->title, container->used_title));
             image_number = StoreImages(container, image_number);
             container_destroy(container);
             free(container);

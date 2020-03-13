@@ -21,20 +21,26 @@ typedef struct {
     char* base;
     size_t baselen;
     char* title;
+    size_t used_title, len_title;
 } container_t;
 
+// Allocate required buffers for container
 void container_create(container_t* container, size_t initial_capacity, const char* const base);
 
+// Adds title to existing title. Haut separates inner text on spaces for some reason.
+// In this function, they are appended back. As a consequence, each title has a trailing space
 void container_changetitle(container_t* container, const char* const title, size_t len);
 
+// Fixes trailing space for title. Call this if you are sure no more title parts will follow
+void container_fixtrailingspace(container_t* container);
+
+// Insert url in container
 bool container_insert_link(container_t* container, url_t* url);
 
+// Insert image url in container
 bool container_insert_image(container_t* container, url_t* url);
 
-// void container_insert(container_t* container, const char* const title, const char* const url) {
-
-// }
-
+// Deallocate buffers for container
 void container_destroy(container_t* container);
 
 #ifdef __cplusplus

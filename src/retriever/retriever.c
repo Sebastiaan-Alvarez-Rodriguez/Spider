@@ -41,9 +41,6 @@ static char* GetWebPage(const char* myurl) {
     return ret;
 }
 
-// Takes a container (with images to download) and a starting number
-// Downloads all images, to <number>.jpg, <number+1>.jpg, etc
-// Returns next free number to use in the future
 size_t StoreImages(const container_t* container, size_t start_nr) {
     size_t successes = 0;
     for (size_t x = 0; x < container->used_imgs; ++x) {
@@ -77,11 +74,7 @@ size_t StoreImages(const container_t* container, size_t start_nr) {
     return start_nr+successes;
 }
 
-// Takes 2 urls as parameter, and a function. First url is the (sub)page of a domain you want to get links from
-// Second url is the base domain name (e.g. domain.test, if you want to get domain.test/subdir/test.html links)
-// The function argument must handle extraction of any requested data, and concatenation using '\n'
-// Returns container, containing web links and image links, and title
-static container_t* parseWithAttributeCallback(const char* myhtmlpage, const char* myurl, void (*function)(haut_t*, strfragment_t*, strfragment_t*)) {
+container_t* GetDataFromWebPage(const char* myhtmlpage, const char* myurl) {
     char* const html = GetWebPage(myhtmlpage);
     if (html == NULL)
         return NULL;
@@ -93,19 +86,14 @@ static container_t* parseWithAttributeCallback(const char* myhtmlpage, const cha
     haut_t parser;
     haut_init(&parser);
     parser.userdata = container;
-    parser.events.attribute = function;
-    
+    parser.events.attribute = callback_attribute;
+    parser.events.innertext = callback_inner_text;
+
     haut_setInput(&parser, html, len);
     haut_parse(&parser);
 
     haut_destroy(&parser);
     free(html);
+    container_fixtrailingspace(container);
     return container;
-}
-
-// Takes 2 urls as parameter, and a function. First url is the (sub)page of a domain you want to get links from (in <a href="url.test"/> format).
-// Second url is the base domain name (e.g. domain.test, if you want to get domain.test/subdir/test.html links)
-// Returns found links with newlines ('\n') between them
-container_t* GetDataFromWebPage(const char* myhtmlpage, const char* myurl) {
-    return parseWithAttributeCallback(myhtmlpage, myurl, callback_element_parsed);
 }

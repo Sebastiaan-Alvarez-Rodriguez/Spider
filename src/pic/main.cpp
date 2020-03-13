@@ -25,7 +25,7 @@
 #define NN_SQ_DIST_RATIO_THR 0.5
 
 // minimum number of matches to even start ransac
-#define MIN_MATCHES_FOR_RANSAC 4
+#define MIN_MATCHES_FOR_RANSAC 16
 
 // Returns number of matches between 2 given feature structs
 // We do not pass images here, because then we have to recompute source features every call
@@ -67,11 +67,20 @@ int main(int argc, char *argv[]) {
     if (argc != 2)
         usage(argv[0]);
     if (!hasPics())
-        return -1;
+        return -2;
 
-    IplImage* query = read_jpeg_file(argv[1]);
+    IplImage* query;
+    try {
+        query = read_jpeg_file(argv[1]);
+    } catch(...) {
+        return -3;
+    }
+
     struct feature* queryfeat;
     const unsigned n1 = sift_features(query, &queryfeat);
+
+    if (n1 < MIN_MATCHES_FOR_RANSAC)
+        return -4;
 
     auto compare = [](std::pair<std::string, unsigned> lhs, std::pair<std::string, unsigned> rhs) {
                         return lhs.second < rhs.second;
@@ -80,12 +89,15 @@ int main(int argc, char *argv[]) {
     std::priority_queue<std::pair<std::string, unsigned>, std::vector<std::pair<std::string, unsigned>>, decltype(compare)> queue(compare); 
 
     for(const auto& p : std::experimental::filesystem::directory_iterator("pics/")) {
-        IplImage* other = read_jpeg_file((char*)p.path().c_str());
-        struct feature* otherfeat;
-        const unsigned n2 = sift_features(other, &otherfeat);
-        queue.push(std::make_pair(p.path(), get_ransac_matches(queryfeat, n1, otherfeat, n2)));
-        cvReleaseImage(&other);
-        free(otherfeat);
+        if (std::experimental::filesystem::file_size(p) != 0) {
+            IplImage* other = read_jpeg_file((char*)p.path().c_str());
+            struct feature* otherfeat;
+            const unsigned n2 = sift_features(other, &otherfeat);
+            if (n2 >= MIN_MATCHES_FOR_RANSAC)
+                queue.push(std::make_pair(p.path(), get_ransac_matches(queryfeat, n1, otherfeat, n2)));
+            cvReleaseImage(&other);
+            free(otherfeat);
+        }
     }
     cvReleaseImage(&query);
     free(queryfeat);
